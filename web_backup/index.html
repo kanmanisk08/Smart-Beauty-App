@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selvi's Beauty Parlour</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Perspective Controller -->
+  <div class="perspective-toggle-bar">
+    <div class="perspective-indicator">
+      <span class="indicator-dot"></span>
+      <span class="indicator-text">Active Perspective: <strong id="current-perspective-label">Customer App</strong></span>
+    </div>
+    <div class="toggle-buttons">
+      <button class="btn-toggle active" id="btn-switch-customer" onclick="switchPerspective('customer')">
+        <i data-lucide="user"></i> Customer View
+      </button>
+      <button class="btn-toggle" id="btn-switch-owner" onclick="switchPerspective('owner')">
+        <i data-lucide="briefcase"></i> Owner/Staff View
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Viewport Container -->
+  <div class="app-viewport-wrapper">
+    <!-- Desktop Phone Bezel Frame -->
+    <div class="phone-frame">
+      <!-- Phone Bezel Details -->
+      <div class="phone-speaker"></div>
+      <div class="phone-camera"></div>
+      
+      <!-- Phone Screen Area -->
+      <div class="phone-screen">
+        <!-- Phone Status Bar -->
+        <div class="phone-status-bar">
+          <div class="status-time">11:11</div>
+          <div class="status-notch-spacer"></div>
+          <div class="status-icons">
+            <i data-lucide="signal" class="status-icon"></i>
+            <i data-lucide="wifi" class="status-icon"></i>
+            <i data-lucide="battery" class="status-icon"></i>
+          </div>
+        </div>
+
+        <!-- Render Target for App Screens -->
+        <div id="screen-content" class="screen-content">
+          <!-- Dynamic contents rendered here by app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
