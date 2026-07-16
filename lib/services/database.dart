@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/service.dart';
@@ -133,274 +134,14 @@ class LocalDatabase {
     }
   ];
 
-  static final List<Map<String, dynamic>> _defaultCustomers = [
-    {
-      "id": "cust-1",
-      "name": "Kanmani",
-      "phone": "+91 9876543210",
-      "email": "kanmani@gmail.com",
-      "badge": "Occasional",
-      "memberSince": "Oct 2021",
-      "birthday": "Jan 14",
-      "skinType": "Sensitive, Dry",
-      "hairType": "Curly, 3B",
-      "preferredTech": "Selvi",
-      "points": 850,
-      "privateNote": "Likes honey balayage color styles."
-    },
-    {
-      "id": "cust-2",
-      "name": "Kanishka",
-      "phone": "+91 9123456780",
-      "email": "kanishka@gmail.com",
-      "badge": "Punctual",
-      "memberSince": "Mar 2022",
-      "birthday": "Feb 20",
-      "skinType": "Oily",
-      "hairType": "Straight",
-      "preferredTech": "Selvi",
-      "points": 450,
-      "privateNote": "Prefer clipper styles."
-    },
-    {
-      "id": "cust-3",
-      "name": "Harini",
-      "phone": "+91 9988776655",
-      "email": "harini@gmail.com",
-      "badge": "Punctual",
-      "memberSince": "Aug 2021",
-      "birthday": "May 12",
-      "skinType": "Normal",
-      "hairType": "Wavy",
-      "preferredTech": "Selvi",
-      "points": 620,
-      "privateNote": "Regular styling sessions."
-    },
-    {
-      "id": "cust-4",
-      "name": "Monica Bellucci",
-      "phone": "+91 9999988888",
-      "email": "monica@gmail.com",
-      "badge": "Punctual",
-      "memberSince": "Oct 2021",
-      "birthday": "Sep 30",
-      "skinType": "Combination",
-      "hairType": "Wavy, 2A",
-      "preferredTech": "Selvi",
-      "points": 850,
-      "privateNote": "Favors hair coloring."
-    },
-    {
-      "id": "cust-5",
-      "name": "Sarah Jenkins",
-      "phone": "+91 8888877777",
-      "email": "sarah@gmail.com",
-      "badge": "New Customer",
-      "memberSince": "May 2026",
-      "birthday": "Dec 05",
-      "skinType": "Normal",
-      "hairType": "Straight",
-      "preferredTech": "Selvi",
-      "points": 200,
-      "privateNote": ""
-    },
-    {
-      "id": "cust-6",
-      "name": "Priyanka",
-      "phone": "+91 7777766666",
-      "email": "priyanka@gmail.com",
-      "badge": "Occasional",
-      "memberSince": "Jan 2023",
-      "birthday": "Mar 21",
-      "skinType": "Dry",
-      "hairType": "Curly",
-      "preferredTech": "Selvi",
-      "points": 320,
-      "privateNote": ""
-    },
-    {
-      "id": "cust-7",
-      "name": "Mithraa",
-      "phone": "+91 6666655555",
-      "email": "mithraa@gmail.com",
-      "badge": "Occasional",
-      "memberSince": "Nov 2022",
-      "birthday": "Apr 15",
-      "skinType": "Oily",
-      "hairType": "Straight",
-      "preferredTech": "Selvi",
-      "points": 150,
-      "privateNote": ""
-    },
-    {
-      "id": "cust-8",
-      "name": "Medhaa",
-      "phone": "+91 5555544444",
-      "email": "medhaa@gmail.com",
-      "badge": "New Customer",
-      "memberSince": "Jun 2026",
-      "birthday": "Jul 04",
-      "skinType": "Sensitive",
-      "hairType": "Wavy",
-      "preferredTech": "Selvi",
-      "points": 200,
-      "privateNote": ""
-    },
-    {
-      "id": "cust-9",
-      "name": "Athmika Sumithran",
-      "phone": "+91 4444433333",
-      "email": "athmika@gmail.com",
-      "badge": "New Customer",
-      "memberSince": "Apr 2026",
-      "birthday": "Jun 18",
-      "skinType": "Dry",
-      "hairType": "Curly",
-      "preferredTech": "Selvi",
-      "points": 200,
-      "privateNote": ""
-    }
-  ];
-
-  /// Builds a single booking record, deriving tax (5%), total, and points earned
-  /// from the price so seed data stays internally consistent with the checkout flow.
-  static Map<String, dynamic> _seedBooking({
-    required String id,
-    required String customer,
-    required String phone,
-    required String email,
-    required String service,
-    required double price,
-    required int duration,
-    required String date,
-    required String time,
-    required String status,
-    Map<String, dynamic>? liveStatus,
-  }) {
-    final tax = double.parse((price * 0.05).toStringAsFixed(2));
-    final total = double.parse((price + tax).toStringAsFixed(2));
-    return {
-      "id": id,
-      "customerName": customer,
-      "customerPhone": phone,
-      "customerEmail": email,
-      "serviceName": service,
-      "price": price,
-      "duration": duration,
-      "date": date,
-      "time": time,
-      "stylist": "Selvi",
-      "status": status,
-      "loyaltyDiscount": 0.0,
-      "tax": tax,
-      "totalPaid": total,
-      "pointsApplied": 0,
-      "pointsEarned": (price * 0.1).floor(),
-      if (liveStatus != null) "liveStatus": liveStatus,
-    };
-  }
-
-  /// Default bookings, generated relative to the current date so that "today",
-  /// live-session, and month-over-month logic always have realistic data to show.
-  /// Every booking references a real catalogue service and a real customer.
-  static List<Map<String, dynamic>> _buildDefaultBookings() {
-    final now = DateTime.now();
-    String fmt(DateTime d) =>
-        "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-
-    final today = fmt(now);
-    final tomorrow = fmt(now.add(const Duration(days: 1)));
-    final earlierA = fmt(now.subtract(const Duration(days: 5)));
-    final earlierB = fmt(now.subtract(const Duration(days: 8)));
-    final lastMonthA = fmt(DateTime(now.year, now.month - 1, 8));
-    final lastMonthB = fmt(DateTime(now.year, now.month - 1, 15));
-    final lastMonthC = fmt(DateTime(now.year, now.month - 1, 21));
-
-    return [
-      // ── Today ─────────────────────────────────────────────────────────────
-      _seedBooking(
-        id: "bk-1", customer: "Harini", phone: "+91 9988776655", email: "harini@gmail.com",
-        service: "Classic Hair Trim", price: 150.0, duration: 20,
-        date: today, time: "09:30 AM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-2", customer: "Monica Bellucci", phone: "+91 9999988888", email: "monica@gmail.com",
-        service: "Hydrating Facial", price: 700.0, duration: 60,
-        date: today, time: "12:00 PM", status: "Confirmed",
-        liveStatus: {
-          "hasDelay": true,
-          "delayMinutes": 10,
-          "adjustedTime": "12:10 PM",
-          "notes": "Stylist is finishing up a previous service",
-        },
-      ),
-      _seedBooking(
-        id: "bk-3", customer: "Kanmani", phone: "+91 9876543210", email: "kanmani@gmail.com",
-        service: "Express Mani", price: 300.0, duration: 30,
-        date: today, time: "03:00 PM", status: "Confirmed",
-      ),
-      _seedBooking(
-        id: "bk-4", customer: "Kanishka", phone: "+91 9123456780", email: "kanishka@gmail.com",
-        service: "Women's Cut & Style", price: 300.0, duration: 45,
-        date: today, time: "05:00 PM", status: "Pending",
-      ),
-      // ── Tomorrow ──────────────────────────────────────────────────────────
-      _seedBooking(
-        id: "bk-5", customer: "Sarah Jenkins", phone: "+91 8888877777", email: "sarah@gmail.com",
-        service: "Gel Pedicure", price: 500.0, duration: 50,
-        date: tomorrow, time: "11:00 AM", status: "Confirmed",
-      ),
-      _seedBooking(
-        id: "bk-6", customer: "Priyanka", phone: "+91 7777766666", email: "priyanka@gmail.com",
-        service: "Party Makeup & Hair Styling", price: 1500.0, duration: 60,
-        date: tomorrow, time: "02:00 PM", status: "Pending",
-      ),
-      // ── Earlier this month (completed) ────────────────────────────────────
-      _seedBooking(
-        id: "bk-7", customer: "Mithraa", phone: "+91 6666655555", email: "mithraa@gmail.com",
-        service: "Underarms Waxing", price: 100.0, duration: 15,
-        date: earlierA, time: "10:00 AM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-8", customer: "Athmika Sumithran", phone: "+91 4444433333", email: "athmika@gmail.com",
-        service: "Bridal Makeup / HD Makeover", price: 5000.0, duration: 120,
-        date: earlierB, time: "01:00 PM", status: "History",
-      ),
-      // ── Last month (baseline for the revenue trend) ───────────────────────
-      _seedBooking(
-        id: "bk-9", customer: "Kanmani", phone: "+91 9876543210", email: "kanmani@gmail.com",
-        service: "Nail Extensions & Custom Art", price: 1200.0, duration: 75,
-        date: lastMonthA, time: "11:30 AM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-10", customer: "Medhaa", phone: "+91 5555544444", email: "medhaa@gmail.com",
-        service: "Hydrating Facial", price: 700.0, duration: 60,
-        date: lastMonthA, time: "04:00 PM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-11", customer: "Monica Bellucci", phone: "+91 9999988888", email: "monica@gmail.com",
-        service: "Party Makeup & Hair Styling", price: 1500.0, duration: 60,
-        date: lastMonthB, time: "05:00 PM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-12", customer: "Harini", phone: "+91 9988776655", email: "harini@gmail.com",
-        service: "Hair Spa & Conditioning", price: 800.0, duration: 60,
-        date: lastMonthB, time: "02:30 PM", status: "History",
-      ),
-      _seedBooking(
-        id: "bk-13", customer: "Priyanka", phone: "+91 7777766666", email: "priyanka@gmail.com",
-        service: "Women's Cut & Style", price: 300.0, duration: 45,
-        date: lastMonthC, time: "10:30 AM", status: "History",
-      ),
-    ];
-  }
-
   // ─── Initialization ───────────────────────────────────────────────────────
-  /// Seeds Firestore with default data. If services list count is outdated, recreates the collection.
+  /// Seeds the service catalogue if it is missing or out of date. Customers and
+  /// bookings are deliberately never seeded — they come from real signups and
+  /// real appointments.
   static Future<void> initDatabase() async {
     try {
       final servicesSnap = await _services.get();
-      bool needsReSeed = servicesSnap.docs.isEmpty || 
+      bool needsReSeed = servicesSnap.docs.isEmpty ||
           servicesSnap.docs.length != _defaultServices.length ||
           servicesSnap.docs.any((doc) {
             final data = doc.data() as Map<String, dynamic>;
@@ -419,78 +160,35 @@ class LocalDatabase {
           batch.set(_services.doc(svc['id'] as String), svc);
         }
         await batch.commit();
-        print('Firestore services initialized with ${_defaultServices.length} items.');
-      }
-
-      // Seed customers if empty
-      final customersSnap = await _customers.get();
-      if (customersSnap.docs.isEmpty) {
-        final batch = _db.batch();
-        for (final cust in _defaultCustomers) {
-          batch.set(_customers.doc(cust['id'] as String), cust);
-        }
-        await batch.commit();
-        print('Firestore customers initialized with ${_defaultCustomers.length} items.');
-      }
-
-      // Seed bookings if empty
-      final bookingsSnap = await _bookings.get();
-      if (bookingsSnap.docs.isEmpty) {
-        final defaultBookings = _buildDefaultBookings();
-        final batch = _db.batch();
-        for (final booking in defaultBookings) {
-          batch.set(_bookings.doc(booking['id'] as String), booking);
-        }
-        await batch.commit();
-        print('Firestore bookings initialized with ${defaultBookings.length} items.');
+        debugPrint('Firestore services initialized with ${_defaultServices.length} items.');
       }
     } catch (e) {
-      print('Firestore initDatabase error: $e');
+      debugPrint('Firestore initDatabase error: $e');
     }
   }
 
-  /// Deletes all documents in services, customers, and bookings, and re-seeds them with default mock data.
+  /// Wipes every customer and booking and restores the service catalogue to the
+  /// defaults. Destructive: real signups and real appointments are deleted too.
+  /// Requires an owner session — only owners may write the catalogue.
   static Future<void> resetAndReSeedDatabase() async {
     try {
-      // 1. Delete all services
-      final servicesSnap = await _services.get();
-      final batch1 = _db.batch();
-      for (final doc in servicesSnap.docs) {
-        batch1.delete(doc.reference);
+      for (final collection in [_services, _customers, _bookings]) {
+        final snap = await collection.get();
+        final batch = _db.batch();
+        for (final doc in snap.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
       }
-      await batch1.commit();
 
-      // 2. Delete all customers
-      final customersSnap = await _customers.get();
-      final batch2 = _db.batch();
-      for (final doc in customersSnap.docs) {
-        batch2.delete(doc.reference);
-      }
-      await batch2.commit();
-
-      // 3. Delete all bookings
-      final bookingsSnap = await _bookings.get();
-      final batch3 = _db.batch();
-      for (final doc in bookingsSnap.docs) {
-        batch3.delete(doc.reference);
-      }
-      await batch3.commit();
-
-      // 4. Seed everything fresh
-      final batch4 = _db.batch();
+      final batch = _db.batch();
       for (final svc in _defaultServices) {
-        batch4.set(_services.doc(svc['id'] as String), svc);
+        batch.set(_services.doc(svc['id'] as String), svc);
       }
-      for (final cust in _defaultCustomers) {
-        batch4.set(_customers.doc(cust['id'] as String), cust);
-      }
-      for (final booking in _buildDefaultBookings()) {
-        batch4.set(_bookings.doc(booking['id'] as String), booking);
-      }
-      await batch4.commit();
-      print('Firestore fully reset and re-seeded successfully.');
+      await batch.commit();
+      debugPrint('Firestore reset: catalogue restored, customers and bookings cleared.');
     } catch (e) {
-      print('Firestore resetAndReSeedDatabase error: $e');
+      debugPrint('Firestore resetAndReSeedDatabase error: $e');
     }
   }
 
