@@ -5,7 +5,6 @@ import 'app.dart';
 import 'providers/auth_provider.dart';
 import 'providers/parlour_provider.dart';
 import 'services/auth_service.dart';
-import 'services/database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,14 +22,12 @@ void main() async {
       ),
     );
     AuthService.setUseFirebase(true);
-    print("Firebase successfully initialized in Flutter app.");
-
-    // Seed Firestore with default services if it's the first launch
-    await LocalDatabase.initDatabase();
-    print("Firestore database initialized.");
+    debugPrint("Firebase successfully initialized in Flutter app.");
+    // Seeding is deliberately not done here: the security rules deny reads and
+    // writes to signed-out clients. ParlourProvider seeds once a user signs in.
   } catch (e) {
     AuthService.setUseFirebase(false);
-    print("Firebase not initialized. Falling back to offline mode. Error: $e");
+    debugPrint("Firebase not initialized. Falling back to offline mode. Error: $e");
   }
 
   runApp(

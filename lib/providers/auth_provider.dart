@@ -13,12 +13,40 @@ class AuthProvider extends ChangeNotifier {
   AuthRole _activeSignupRole = AuthRole.customer;
   String _currentPerspective = 'customer'; // 'customer' or 'owner'
   bool _isLoading = false;
+  String? _errorMessage;
 
   Customer? get currentUser => _currentUser;
   AuthRole get activeLoginRole => _activeLoginRole;
   AuthRole get activeSignupRole => _activeSignupRole;
   String get currentPerspective => _currentPerspective;
   bool get isLoading => _isLoading;
+
+  /// Why the last login/signUp returned false, ready to show the user.
+  String? get errorMessage => _errorMessage;
+
+  /// Turns Firebase's error codes into something a customer can act on.
+  static String _friendlyAuthError(fb.FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+      case 'user-not-found':
+        return 'Incorrect email or password.';
+      case 'invalid-email':
+        return 'That email address does not look right.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email. Try logging in.';
+      case 'weak-password':
+        return 'Password is too weak — use at least 6 characters.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network.';
+      default:
+        return e.message ?? 'Authentication failed. Please try again.';
+    }
+  }
 
   void selectLoginRole(AuthRole role) {
     _activeLoginRole = role;
@@ -83,6 +111,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> login(String usernameOrEmail, String password) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -91,14 +120,20 @@ class AuthProvider extends ChangeNotifier {
       if (user != null) {
         _currentUser = user;
         _currentPerspective = isOwner ? 'owner' : 'customer';
-        await LocalDatabase.setCurrentUser(user);
+        await LocalDatabase.setCurrentUser(user, persist: !isOwner);
         await LocalDatabase.setCurrentPerspective(_currentPerspective);
         _isLoading = false;
         notifyListeners();
         return true;
       }
+      _errorMessage = 'Login failed. Please try again.';
+    } on AuthException catch (e) {
+      _errorMessage = e.message;
+    } on fb.FirebaseAuthException catch (e) {
+      _errorMessage = _friendlyAuthError(e);
     } catch (e) {
-      print("Login error: $e");
+      debugPrint('Login error: $e');
+      _errorMessage = 'Something went wrong. Please try again.';
     }
 
     _isLoading = false;
@@ -115,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
     int? age,
   }) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -131,14 +167,20 @@ class AuthProvider extends ChangeNotifier {
       if (user != null) {
         _currentUser = user;
         _currentPerspective = isOwner ? 'owner' : 'customer';
-        await LocalDatabase.setCurrentUser(user);
+        await LocalDatabase.setCurrentUser(user, persist: !isOwner);
         await LocalDatabase.setCurrentPerspective(_currentPerspective);
         _isLoading = false;
         notifyListeners();
         return true;
       }
+      _errorMessage = 'Sign up failed. Please try again.';
+    } on AuthException catch (e) {
+      _errorMessage = e.message;
+    } on fb.FirebaseAuthException catch (e) {
+      _errorMessage = _friendlyAuthError(e);
     } catch (e) {
-      print("Signup error: $e");
+      debugPrint('Signup error: $e');
+      _errorMessage = 'Something went wrong. Please try again.';
     }
 
     _isLoading = false;

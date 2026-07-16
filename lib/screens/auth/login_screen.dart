@@ -42,7 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Failed. Please check your credentials.")),
+        SnackBar(
+          content: Text(auth.errorMessage ?? "Login failed. Please check your credentials."),
+        ),
       );
     }
   }
@@ -123,16 +125,18 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Input Username
+              // Input Email
               const Text(
-                "Username / Phone Number",
+                "Email",
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.darkText),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: _usernameController,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
                 decoration: InputDecoration(
-                  hintText: "Enter username or phone",
+                  hintText: "Enter your email",
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

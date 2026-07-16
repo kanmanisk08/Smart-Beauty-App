@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/common.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -112,7 +111,9 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Signup Failed. Please check parameters.")),
+        SnackBar(
+          content: Text(auth.errorMessage ?? "Sign up failed. Please check your details."),
+        ),
       );
     }
   }
@@ -177,21 +178,8 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Role Selector Pills
-              const Text(
-                "Sign Up As",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
-                ),
-              ),
-              const SizedBox(height: 8),
-              RoleSelectorPills(
-                activeRole: auth.activeSignupRole,
-                onRoleChanged: (role) => auth.selectSignupRole(role),
-              ),
-              const SizedBox(height: 16),
+              // No role selector here: owner accounts are created by the parlour
+              // in the Firebase Console, so this screen only signs up customers.
 
               // Input Username / Name
               Text(

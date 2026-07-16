@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/service.dart';
 import '../models/customer.dart';
 import '../models/booking.dart';
+import '../services/auth_service.dart';
 import '../services/database.dart';
 
 /// Where a single appointment sits in its lifecycle. Derived from the wall
@@ -386,27 +387,72 @@ class ParlourProvider extends ChangeNotifier {
   StreamSubscription? _servicesSub;
   StreamSubscription? _customersSub;
   StreamSubscription? _bookingsSub;
+  StreamSubscription? _authSub;
 
-  // Initialize data
+  /// Firestore denies reads to signed-out clients (see firestore.rules), so the
+  /// collection streams follow the auth state rather than opening at startup —
+  /// subscribing on the login screen would only earn permission-denied errors.
   Future<void> initializeData() async {
-    await LocalDatabase.initDatabase();
-    
-    _servicesSub = LocalDatabase.streamServices().listen((list) {
-      _services = list;
-      notifyListeners();
-    });
-
-    _customersSub = LocalDatabase.streamCustomers().listen((list) {
-      _customers = list;
-      notifyListeners();
-    });
-
-    _bookingsSub = LocalDatabase.streamBookings().listen((list) {
-      _bookings = list;
-      notifyListeners();
-    });
-
     startTimerInterval();
+
+    if (!AuthService.isFirebaseEnabled) return;
+
+    _authSub = AuthService.authStateChanges.listen((fbUser) {
+      if (fbUser != null) {
+        _bindFirestore();
+      } else {
+        _unbindFirestore();
+      }
+    });
+  }
+
+  Future<void> _bindFirestore() async {
+    await _cancelDataSubs();
+
+    // Safe to seed now that we are authenticated. No-ops once seeded; seeding
+    // the service catalogue needs an owner session.
+    await LocalDatabase.initDatabase();
+
+    _servicesSub = LocalDatabase.streamServices().listen(
+      (list) {
+        _services = list;
+        notifyListeners();
+      },
+      onError: (e) => debugPrint('services stream error: $e'),
+    );
+
+    _customersSub = LocalDatabase.streamCustomers().listen(
+      (list) {
+        _customers = list;
+        notifyListeners();
+      },
+      onError: (e) => debugPrint('customers stream error: $e'),
+    );
+
+    _bookingsSub = LocalDatabase.streamBookings().listen(
+      (list) {
+        _bookings = list;
+        notifyListeners();
+      },
+      onError: (e) => debugPrint('bookings stream error: $e'),
+    );
+  }
+
+  Future<void> _unbindFirestore() async {
+    await _cancelDataSubs();
+    _services = [];
+    _customers = [];
+    _bookings = [];
+    notifyListeners();
+  }
+
+  Future<void> _cancelDataSubs() async {
+    await _servicesSub?.cancel();
+    await _customersSub?.cancel();
+    await _bookingsSub?.cancel();
+    _servicesSub = null;
+    _customersSub = null;
+    _bookingsSub = null;
   }
 
   Future<void> refreshData() async {
@@ -873,6 +919,7 @@ class ParlourProvider extends ChangeNotifier {
   @override
   void dispose() {
     _timer?.cancel();
+    _authSub?.cancel();
     _servicesSub?.cancel();
     _customersSub?.cancel();
     _bookingsSub?.cancel();

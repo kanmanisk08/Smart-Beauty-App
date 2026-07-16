@@ -668,13 +668,17 @@ class LocalDatabase {
     return Customer.fromJson(json.decode(jsonStr));
   }
 
-  static Future<void> setCurrentUser(Customer user) async {
+  /// Stores the session locally. [persist] also mirrors the profile to the
+  /// customers collection so the owner can see it — pass false for owner
+  /// sessions, which do not belong in the customer directory.
+  static Future<void> setCurrentUser(Customer user, {bool persist = true}) async {
     // Save session locally for fast access
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_currentUserKey, json.encode(user.toJson()));
 
-    // Also persist to Firestore so owner can see the customer profile
-    await saveCustomer(user);
+    if (persist) {
+      await saveCustomer(user);
+    }
   }
 
   static Future<void> clearCurrentUser() async {

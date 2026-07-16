@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// Baseline rules for Selvi's Beauty Parlour.
+//
+// Two constraints these rules impose on the app:
+//   1. Sign in with an email address, not a username or phone. The username
+//      lookup in auth_service.dart searches Firestore before signing in, and
+//      that read is blocked here.
+//   2. Seeding (initDatabase) only works while signed in. Seed once from a
+//      signed-in session; after that it no-ops and normal use is unaffected.
+//
+// Owner accounts cannot be created from the app — see the /owners block.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/owners/$(request.auth.uid));
+    }
+
+    // Who counts as an owner. Writes are blocked outright: the app's owner
+    // signup path writes role:'owner' straight from the client, which would let
+    // anyone grant themselves the owner dashboard. Create owner documents by
+    // hand in the Firebase Console instead.
+    match /owners/{ownerId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Service catalogue. Prices and descriptions are not sensitive, but only
+    // owners may change them.
+    match /services/{serviceId} {
+      allow read: if signedIn();
+      allow write: if isOwner();
+    }
+
+    // Customer records hold phone, email, and privateNote. Still readable by any
+    // signed-in user, because the owner dashboard lists every customer and has
+    // no way to identify itself as the owner at read time. Tightening this
+    // requires the customer/owner split described in the README.
+    match /customers/{customerId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if isOwner();
+    }
+
+    // Bookings carry customer contact details alongside each appointment.
+    match /bookings/{bookingId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if isOwner();
+    }
+
+    // Anything not named above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
